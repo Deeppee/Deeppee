@@ -1,0 +1,54 @@
+{
+  "source": "WHO Mortality Database via Our World in Data (cancer-death-rate-by-age-group)",
+  "metric": "Deaths from malignant neoplasms per 100,000 people in each age group, both sexes",
+  "panel_countries": [
+    "United States",
+    "United Kingdom",
+    "Japan",
+    "France",
+    "Sweden",
+    "Netherlands",
+    "Australia",
+    "Canada",
+    "Denmark",
+    "Finland",
+    "Switzerland",
+    "Italy",
+    "Spain",
+    "Belgium",
+    "Austria"
+  ],
+  "age_groups": [
+    "40–44",
+    "45–49",
+    "50–54",
+    "55–59",
+    "60–64",
+    "65–69",
+    "70–74",
+    "75–79",
+    "80–84",
+    "85+"
+  ],
+  "years": [
+    1960,
+    1970,
+    1980,
+    1990,
+    2000,
+    2010,
+    2020,
+    2022
+  ],
+  "n_countries_by_year": {
+    "1960": 15,
+    "1970": 15,
+    "1980": 15,
+    "1990": 15,
+    "2000": 15,
+    "2010": 15,
+    "2020": 15,
+    "2022": 13
+  },
+  "note_ru": "Ставки возрастно-специфичные (не age-standardized): число смертей от рака в возрастной группе / численность этой группы × 100 000. Среднее — невзвешенное по странам панели с полными данными за год."
+}

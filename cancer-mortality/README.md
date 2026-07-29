@@ -41,11 +41,20 @@
 | 2020 | 101.2 |
 | 2022 | 97.1 |
 
+## Смертность по возрасту (шаг 5 лет, с 40)
+
+Возрастно-специфичные ставки (на 100 000 в данной возрастной группе), среднее той же панели:
+
+см. [`AGE_SPECIFIC_TABLE.md`](AGE_SPECIFIC_TABLE.md) и `age_specific_mortality_table.csv`.
+
+Кратко: с 1990 по 2022 смертность снизилась во всех возрастах от 40 лет; сильнее всего в 40–54 (−~50–54%), слабее в 85+ (−9%).
+
 ## Воспроизведение
 
 ```bash
 pip install pandas matplotlib
 python cancer-mortality/build_charts.py
+python cancer-mortality/build_age_table.py
 ```
 
-Скрипт скачает CSV OWID (если нет локальной копии) и пересоберёт CSV/PNG/`summary.json`.
+Скрипты скачают CSV OWID (если нет локальной копии) и пересоберут таблицы/графики.
