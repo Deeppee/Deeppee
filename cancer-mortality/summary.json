@@ -1,0 +1,77 @@
+{
+  "source": "WHO Mortality Database via Our World in Data (cancer-death-rate-who-mdb)",
+  "metric": "Age-standardized deaths from malignant neoplasms per 100,000, both sexes",
+  "panel_countries": [
+    "United States",
+    "United Kingdom",
+    "Japan",
+    "France",
+    "Sweden",
+    "Netherlands",
+    "Australia",
+    "Canada",
+    "Denmark",
+    "Finland",
+    "Switzerland",
+    "Italy",
+    "Spain",
+    "Belgium",
+    "Austria"
+  ],
+  "series_start": 1951,
+  "series_end": 2022,
+  "start_rate": 135.8,
+  "peak_year": 1973,
+  "peak_rate": 154.6,
+  "plateau_within_2pct_of_peak": [
+    1963,
+    1989
+  ],
+  "latest_rate": 97.1,
+  "change_peak_to_latest_pct": -37.2,
+  "change_start_to_latest_pct": -28.5,
+  "change_1990_to_latest_pct": -35.6,
+  "decade_snapshots": [
+    {
+      "target_year": 1960,
+      "actual_year": 1960,
+      "rate": 149.9
+    },
+    {
+      "target_year": 1970,
+      "actual_year": 1970,
+      "rate": 152.6
+    },
+    {
+      "target_year": 1980,
+      "actual_year": 1980,
+      "rate": 153.9
+    },
+    {
+      "target_year": 1990,
+      "actual_year": 1990,
+      "rate": 150.7
+    },
+    {
+      "target_year": 2000,
+      "actual_year": 2000,
+      "rate": 136.4
+    },
+    {
+      "target_year": 2010,
+      "actual_year": 2010,
+      "rate": 120.0
+    },
+    {
+      "target_year": 2020,
+      "actual_year": 2020,
+      "rate": 101.2
+    },
+    {
+      "target_year": "latest",
+      "actual_year": 2022,
+      "rate": 97.1
+    }
+  ],
+  "verdict_ru": "В панели развитых стран age-standardized смертность от рака росла/держалась на высоком плато примерно до конца 1980-х, затем устойчиво снизилась: к 2022 около −37% от пика среднего и около −36% относительно 1990."
+}
