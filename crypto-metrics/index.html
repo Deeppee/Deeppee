@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Крипто-метрики: бычка или медвежка (2023–2026)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --bg-elev: #171e26;
+      --line: #2a3542;
+      --text: #e8eef4;
+      --muted: #8b9aab;
+      --bull: #2bb673;
+      --bear: #e35d6a;
+      --accent: #3db8c5;
+      --warn: #e0a106;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", sans-serif;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, #1a2a33 0%, transparent 55%),
+        radial-gradient(900px 500px at 100% 0%, #241a1c 0%, transparent 50%),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 18px 64px; }
+    header h1 {
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      margin: 0 0 8px;
+      letter-spacing: -0.02em;
+    }
+    header p { color: var(--muted); margin: 0 0 22px; max-width: 70ch; }
+    .meta {
+      display: flex; flex-wrap: wrap; gap: 10px 18px;
+      color: var(--muted); font-size: 0.9rem; margin-bottom: 24px;
+      font-family: "IBM Plex Mono", monospace;
+    }
+    .meta span { color: var(--accent); }
+    .yearly {
+      width: 100%; border-collapse: collapse; margin: 0 0 28px;
+      font-size: 0.92rem; overflow-x: auto; display: block;
+    }
+    .yearly table { width: 100%; border-collapse: collapse; min-width: 920px; }
+    .yearly th, .yearly td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px; text-align: right;
+      font-family: "IBM Plex Mono", monospace; font-size: 0.85rem;
+    }
+    .yearly th:first-child, .yearly td:first-child { text-align: left; }
+    .yearly th { color: var(--muted); font-weight: 500; font-family: "IBM Plex Sans", sans-serif; }
+    .pos { color: var(--bull); }
+    .neg { color: var(--bear); }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+    @media (min-width: 900px) {
+      .grid.two { grid-template-columns: 1fr 1fr; }
+    }
+    section.panel {
+      background: color-mix(in srgb, var(--bg-elev) 88%, transparent);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 16px 16px 8px;
+    }
+    section.panel h2 {
+      margin: 0 0 4px;
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+    section.panel .hint {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+    .chart-box { position: relative; height: 300px; }
+    .chart-box.tall { height: 360px; }
+    footer {
+      margin-top: 28px; color: var(--muted); font-size: 0.82rem;
+      border-top: 1px solid var(--line); padding-top: 16px;
+    }
+    footer code { color: var(--accent); }
+    .legend-note { font-size: 0.8rem; color: var(--muted); margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Крипто-метрики режима рынка</h1>
+      <p>
+        Ежедневные и годовые значения ключевых индикаторов бычьего/медвежьего рынка
+        с января 2023 по сегодня. Данные собраны из публичных API и агрегированы в один дашборд.
+      </p>
+      <div class="meta" id="meta"></div>
+    </header>
+
+    <div class="yearly" id="yearly"></div>
+
+    <div class="grid">
+      <section class="panel">
+        <h2>BTC цена и 200 DMA</h2>
+        <p class="hint">Цена выше 200-дневной средней — типичный бычий режим; ниже — медвежий.</p>
+        <div class="chart-box tall"><canvas id="cPrice"></canvas></div>
+      </section>
+    </div>
+
+    <div class="grid two" style="margin-top:18px">
+      <section class="panel">
+        <h2>Bitcoin Dominance</h2>
+        <p class="hint">Рост BTC.D часто = risk-off / капитал в BTC; падение = риск в альты.</p>
+        <div class="chart-box"><canvas id="cDom"></canvas></div>
+      </section>
+      <section class="panel">
+        <h2>Fear &amp; Greed Index</h2>
+        <p class="hint">0–24 extreme fear, 25–49 fear, 50–74 greed, 75–100 extreme greed.</p>
+        <div class="chart-box"><canvas id="cFng"></canvas></div>
+      </section>
+      <section class="panel">
+        <h2>Funding Rate (BTC perp, % за 8ч)</h2>
+        <p class="hint">Сильно плюс = перегретые лонги; минус = перекос в шорты / страх.</p>
+        <div class="chart-box"><canvas id="cFund"></canvas></div>
+      </section>
+      <section class="panel">
+        <h2>MVRV</h2>
+        <p class="hint">Рыночная капитализация / реализованная. &gt;3.5 перегрев, &lt;1 недооценка.</p>
+        <div class="chart-box"><canvas id="cMvrv"></canvas></div>
+      </section>
+      <section class="panel">
+        <h2>Exchange Netflow (7d avg, USD)</h2>
+        <p class="hint">Плюс = приток на биржи (давление продаж); минус = отток / накопление.</p>
+        <div class="chart-box"><canvas id="cFlow"></canvas></div>
+      </section>
+      <section class="panel">
+        <h2>Open Interest (OKX BTC swap, USD)</h2>
+        <p class="hint">Недельный OI: рост с ценой усиливает тренд; рост при падении — шорт-давление.</p>
+        <div class="chart-box"><canvas id="cOi"></canvas></div>
+      </section>
+    </div>
+
+    <div class="grid" style="margin-top:18px">
+      <section class="panel">
+        <h2>US Spot BTC ETF Net Flows</h2>
+        <p class="hint">Суммарный дневной нетто-поток по спотовым BTC ETF (с января 2024).</p>
+        <div class="chart-box tall"><canvas id="cEtf"></canvas></div>
+        <p class="legend-note">Кумулятивный поток показан линией на правой оси.</p>
+      </section>
+    </div>
+
+    <footer id="footer"></footer>
+  </div>
+
+  <script>
+    const fmt = {
+      usd: (v) => v == null ? "—" : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(v),
+      usdCompact: (v) => v == null ? "—" : new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 2 }).format(v),
+      pct: (v, d=2) => v == null ? "—" : `${v > 0 ? "+" : ""}${Number(v).toFixed(d)}%`,
+      num: (v, d=2) => v == null ? "—" : Number(v).toFixed(d),
+    };
+
+    const commonOpts = {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: { labels: { color: "#8b9aab", boxWidth: 12 } },
+        tooltip: {
+          backgroundColor: "#171e26",
+          borderColor: "#2a3542",
+          borderWidth: 1,
+          titleColor: "#e8eef4",
+          bodyColor: "#c5d0db",
+        },
+      },
+      scales: {
+        x: {
+          type: "time",
+          time: { unit: "month" },
+          grid: { color: "rgba(42,53,66,0.55)" },
+          ticks: { color: "#8b9aab", maxRotation: 0 },
+        },
+        y: {
+          grid: { color: "rgba(42,53,66,0.55)" },
+          ticks: { color: "#8b9aab" },
+        },
+      },
+    };
+
+    function line(canvas, datasets, yExtra = {}) {
+      return new Chart(canvas, {
+        type: "line",
+        data: { datasets },
+        options: {
+          ...commonOpts,
+          elements: { point: { radius: 0 }, line: { borderWidth: 1.6, tension: 0.05 } },
+          scales: {
+            ...commonOpts.scales,
+            y: { ...commonOpts.scales.y, ...yExtra },
+          },
+        },
+      });
+    }
+
+    function downsample(arr, key, every = 1) {
+      return arr.filter((_, i) => i % every === 0).map((r) => ({ x: r.date, y: r[key] }));
+    }
+
+    async function main() {
+      const data = await fetch("./data/metrics.json").then((r) => r.json());
+      const { meta, yearly, daily, openInterestWeekly, etfDaily } = data;
+
+      document.getElementById("meta").innerHTML = `
+        <div>Период: <span>${meta.range.start} → ${meta.range.end}</span></div>
+        <div>Собрано: <span>${meta.generatedAt.slice(0, 19)}Z</span></div>
+        <div>Точек/день: <span>${daily.length}</span></div>
+      `;
+
+      const tableRows = yearly.map((y) => {
+        const retCls = y.btcReturnPct >= 0 ? "pos" : "neg";
+        const etfCls = y.etfNetFlowUsd == null ? "" : (y.etfNetFlowUsd >= 0 ? "pos" : "neg");
+        return `<tr>
+          <td>${y.year}${y.year === "2026" ? " YTD" : ""}</td>
+          <td>${fmt.usd(y.btcPriceAvg)}</td>
+          <td class="${retCls}">${fmt.pct(y.btcReturnPct)}</td>
+          <td>${y.pctDaysAboveSma200 == null ? "—" : y.pctDaysAboveSma200 + "%"}</td>
+          <td>${fmt.num(y.btcDominanceAvg, 1)}%</td>
+          <td>${fmt.num(y.fearGreedAvg, 1)}</td>
+          <td>${fmt.num(y.mvrvAvg, 2)}</td>
+          <td>${fmt.num(y.fundingRateAvgPct, 4)}%</td>
+          <td class="${etfCls}">${y.etfNetFlowUsd == null ? "—" : fmt.usdCompact(y.etfNetFlowUsd)}</td>
+        </tr>`;
+      }).join("");
+
+      document.getElementById("yearly").innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Год</th>
+              <th>BTC avg</th>
+              <th>Доходность</th>
+              <th>Дней &gt; 200DMA</th>
+              <th>BTC.D avg</th>
+              <th>F&amp;G avg</th>
+              <th>MVRV avg</th>
+              <th>Funding avg</th>
+              <th>ETF net</th>
+            </tr>
+          </thead>
+          <tbody>${tableRows}</tbody>
+        </table>`;
+
+      const priceDs = [
+        {
+          label: "BTC USD",
+          data: daily.map((r) => ({ x: r.date, y: r.btcPrice })),
+          borderColor: "#e8eef4",
+          backgroundColor: "transparent",
+        },
+        {
+          label: "200 DMA",
+          data: daily.filter((r) => r.sma200 != null).map((r) => ({ x: r.date, y: r.sma200 })),
+          borderColor: "#e0a106",
+          borderDash: [5, 4],
+          backgroundColor: "transparent",
+        },
+      ];
+      line(document.getElementById("cPrice"), priceDs, {
+        ticks: {
+          color: "#8b9aab",
+          callback: (v) => "$" + Intl.NumberFormat("en-US", { notation: "compact" }).format(v),
+        },
+      });
+
+      line(document.getElementById("cDom"), [{
+        label: "BTC Dominance %",
+        data: daily.filter((r) => r.btcDominance != null).map((r) => ({ x: r.date, y: r.btcDominance })),
+        borderColor: "#3db8c5",
+        backgroundColor: "rgba(61,184,197,0.12)",
+        fill: true,
+      }]);
+
+      line(document.getElementById("cFng"), [{
+        label: "Fear & Greed",
+        data: daily.filter((r) => r.fearGreed != null).map((r) => ({ x: r.date, y: r.fearGreed })),
+        borderColor: "#c58b3d",
+        backgroundColor: "transparent",
+        segment: {
+          borderColor: (ctx) => {
+            const y = ctx.p1.parsed.y;
+            if (y < 25) return "#e35d6a";
+            if (y < 50) return "#c58b3d";
+            if (y < 75) return "#2bb673";
+            return "#1f9d55";
+          },
+        },
+      }], { min: 0, max: 100 });
+
+      // funding: downsample a bit for readability + 7d-ish via every 1 but thinner
+      const fundPts = daily.filter((r) => r.fundingRatePct != null).map((r) => ({ x: r.date, y: r.fundingRatePct }));
+      line(document.getElementById("cFund"), [{
+        label: "Funding % / 8h",
+        data: fundPts,
+        borderColor: "#5aa7ff",
+        backgroundColor: "transparent",
+        borderWidth: 1,
+      }], {
+        ticks: { color: "#8b9aab", callback: (v) => v.toFixed(3) + "%" },
+      });
+
+      line(document.getElementById("cMvrv"), [{
+        label: "MVRV",
+        data: daily.filter((r) => r.mvrv != null).map((r) => ({ x: r.date, y: r.mvrv })),
+        borderColor: "#2bb673",
+        backgroundColor: "transparent",
+      }]);
+
+      line(document.getElementById("cFlow"), [{
+        label: "Netflow 7d avg",
+        data: daily.filter((r) => r.exchangeNetflowUsd7d != null).map((r) => ({ x: r.date, y: r.exchangeNetflowUsd7d })),
+        borderColor: "#e35d6a",
+        backgroundColor: "rgba(227,93,106,0.08)",
+        fill: true,
+      }], {
+        ticks: {
+          color: "#8b9aab",
+          callback: (v) => Intl.NumberFormat("en-US", { notation: "compact" }).format(v),
+        },
+      });
+
+      line(document.getElementById("cOi"), [{
+        label: "OI USD",
+        data: openInterestWeekly.map((r) => ({ x: r.date, y: r.oiUsd })),
+        borderColor: "#3db8c5",
+        backgroundColor: "transparent",
+      }], {
+        ticks: {
+          color: "#8b9aab",
+          callback: (v) => "$" + Intl.NumberFormat("en-US", { notation: "compact" }).format(v),
+        },
+      });
+
+      let cum = 0;
+      const etfCum = etfDaily.map((r) => {
+        cum += r.netFlowUsd;
+        return { x: r.date, y: cum };
+      });
+
+      new Chart(document.getElementById("cEtf"), {
+        data: {
+          datasets: [
+            {
+              type: "bar",
+              label: "Daily net flow",
+              data: etfDaily.map((r) => ({ x: r.date, y: r.netFlowUsd })),
+              backgroundColor: etfDaily.map((r) => r.netFlowUsd >= 0 ? "rgba(43,182,115,0.65)" : "rgba(227,93,106,0.65)"),
+              borderWidth: 0,
+              yAxisID: "y",
+              order: 2,
+            },
+            {
+              type: "line",
+              label: "Cumulative",
+              data: etfCum,
+              borderColor: "#e8eef4",
+              backgroundColor: "transparent",
+              pointRadius: 0,
+              borderWidth: 1.6,
+              yAxisID: "y1",
+              order: 1,
+            },
+          ],
+        },
+        options: {
+          ...commonOpts,
+          scales: {
+            x: commonOpts.scales.x,
+            y: {
+              ...commonOpts.scales.y,
+              position: "left",
+              title: { display: true, text: "Daily", color: "#8b9aab" },
+              ticks: {
+                color: "#8b9aab",
+                callback: (v) => Intl.NumberFormat("en-US", { notation: "compact" }).format(v),
+              },
+            },
+            y1: {
+              position: "right",
+              grid: { drawOnChartArea: false },
+              title: { display: true, text: "Cumulative", color: "#8b9aab" },
+              ticks: {
+                color: "#8b9aab",
+                callback: (v) => Intl.NumberFormat("en-US", { notation: "compact" }).format(v),
+              },
+            },
+          },
+        },
+      });
+
+      const sources = Object.entries(meta.sources)
+        .map(([k, v]) => `<li><code>${k}</code> — ${v}</li>`)
+        .join("");
+      document.getElementById("footer").innerHTML = `
+        <strong>Источники</strong>
+        <ul>${sources}</ul>
+        <p>${meta.notes.join(" ")}</p>
+      `;
+    }
+
+    main().catch((err) => {
+      document.body.insertAdjacentHTML("afterbegin", `<pre style="color:#e35d6a;padding:16px">${err}</pre>`);
+    });
+  </script>
+</body>
+</html>
